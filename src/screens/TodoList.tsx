@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
 	Animated,
 	Platform,
@@ -11,44 +11,49 @@ import {
 	View,
 } from 'react-native';
 
-const createSheetMarginTop = -168;
-
 const TodoList = () => {
+	const [createSheetVisible, setCreateSheetVisible] = useState(false);
+
 	const slideAnimation = useRef(new Animated.Value(createSheetMarginTop)).current;
-	const iconInterpolate = slideAnimation.interpolate({
+	const iconAnimation = slideAnimation.interpolate({
 		inputRange: [createSheetMarginTop, 0],
 		outputRange: ['0deg', '45deg'],
 	});
 
-	const [isCreateSheetVisible, setIsCreateSheetVisible] = useState(false);
-
 	useEffect(() => {
 		Animated.spring(slideAnimation, {
 			useNativeDriver: false,
-			toValue: isCreateSheetVisible ? 0 : createSheetMarginTop,
+			toValue: createSheetVisible ? 0 : createSheetMarginTop,
 		}).start();
-	}, [isCreateSheetVisible]);
+	}, [createSheetVisible]);
+
+	const onFabPressed = useCallback(() => {
+		setCreateSheetVisible(prevState => !prevState);
+	}, []);
 
 	return (
 		<View style={styles.container}>
 			<SafeAreaView style={styles.header}>
 				<View style={styles.headerContainer}>
-					<Text style={styles.screenTitle}>{isCreateSheetVisible ? 'Create New Todo' : 'Todo List'}</Text>
+					<Text style={styles.screenTitle}>
+						{createSheetVisible ? 'Yeni Görev Oluştur' : 'Görev Listesi'}
+					</Text>
 					<TextInput
-						placeholder={'What you have todo'}
+						placeholder={'Bundan sonra neler yapmalısın?'}
+						placeholderTextColor={'rgba(255,255,255,0.8)'}
 						style={styles.textInput}
 					/>
 					<TouchableOpacity>
 						<View style={styles.button}>
-							<Text style={styles.buttonText}>Create</Text>
+							<Text style={styles.buttonText}>Oluştur</Text>
 						</View>
 					</TouchableOpacity>
 				</View>
 			</SafeAreaView>
 			<Animated.View style={[styles.contentContainer, { marginTop: slideAnimation }]}>
-				<TouchableOpacity onPress={() => setIsCreateSheetVisible(prevState => !prevState)}>
+				<TouchableOpacity onPress={onFabPressed}>
 					<View style={styles.fab}>
-						<Animated.View style={[styles.fabIcon, { transform: [{ rotate: iconInterpolate }] }]} />
+						<Animated.View style={[styles.fabIcon, { transform: [{ rotate: iconAnimation }] }]} />
 					</View>
 				</TouchableOpacity>
 			</Animated.View>
@@ -58,8 +63,9 @@ const TodoList = () => {
 
 export default TodoList;
 
+const createSheetMarginTop = -162;
 const purple = '#c4a9f6';
-const purpleDark = '#B095E5';
+const purpleDark = '#B79EE7';
 const blue = '#7ad9f5';
 const borderRadius = Platform.OS === 'ios' ? 40 : 22;
 
@@ -69,16 +75,16 @@ const styles = StyleSheet.create({
 		backgroundColor: purple,
 	},
 	header: {
-		height: 260,
+		height: 250,
 		paddingTop: StatusBar.currentHeight,
 	},
 	headerContainer: {
 		alignItems: 'center',
 	},
 	screenTitle: {
-		marginTop: Platform.OS === 'ios' ? 8 : 22,
-		fontSize: 18,
-		fontWeight: '700',
+		marginTop: Platform.OS === 'ios' ? 5 : 22,
+		fontSize: 16,
+		fontWeight: Platform.OS === 'ios' ? '600' : '700',
 		color: 'white',
 	},
 	textInput: {
@@ -100,7 +106,7 @@ const styles = StyleSheet.create({
 	},
 	buttonText: {
 		fontSize: 16,
-		fontWeight: '600',
+		fontWeight: Platform.OS === 'ios' ? '600' : '700',
 		color: 'black',
 	},
 	contentContainer: {
