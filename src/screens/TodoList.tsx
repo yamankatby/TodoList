@@ -1,12 +1,39 @@
-import React from 'react';
-import { Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+	Animated,
+	Platform,
+	SafeAreaView,
+	StatusBar,
+	StyleSheet,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
+} from 'react-native';
+
+const createSheetMarginTop = -168;
 
 const TodoList = () => {
+	const slideAnimation = useRef(new Animated.Value(createSheetMarginTop)).current;
+	const iconInterpolate = slideAnimation.interpolate({
+		inputRange: [createSheetMarginTop, 0],
+		outputRange: ['0deg', '45deg'],
+	});
+
+	const [isCreateSheetVisible, setIsCreateSheetVisible] = useState(false);
+
+	useEffect(() => {
+		Animated.spring(slideAnimation, {
+			useNativeDriver: false,
+			toValue: isCreateSheetVisible ? 0 : createSheetMarginTop,
+		}).start();
+	}, [isCreateSheetVisible]);
+
 	return (
 		<View style={styles.container}>
 			<SafeAreaView style={styles.header}>
 				<View style={styles.headerContainer}>
-					<Text style={styles.screenTitle}>Create Todo</Text>
+					<Text style={styles.screenTitle}>{isCreateSheetVisible ? 'Create New Todo' : 'Todo List'}</Text>
 					<TextInput
 						placeholder={'What you have todo'}
 						style={styles.textInput}
@@ -18,13 +45,13 @@ const TodoList = () => {
 					</TouchableOpacity>
 				</View>
 			</SafeAreaView>
-			<View style={styles.contentContainer}>
-				<TouchableOpacity style={{ borderRadius: 40 }}>
+			<Animated.View style={[styles.contentContainer, { marginTop: slideAnimation }]}>
+				<TouchableOpacity onPress={() => setIsCreateSheetVisible(prevState => !prevState)}>
 					<View style={styles.fab}>
-						<View style={styles.fabIcon} />
+						<Animated.View style={[styles.fabIcon, { transform: [{ rotate: iconInterpolate }] }]} />
 					</View>
 				</TouchableOpacity>
-			</View>
+			</Animated.View>
 		</View>
 	);
 };
@@ -42,7 +69,7 @@ const styles = StyleSheet.create({
 		backgroundColor: purple,
 	},
 	header: {
-		height: 280,
+		height: 260,
 		paddingTop: StatusBar.currentHeight,
 	},
 	headerContainer: {
@@ -81,7 +108,6 @@ const styles = StyleSheet.create({
 		backgroundColor: 'white',
 		borderTopStartRadius: borderRadius,
 		borderTopEndRadius: borderRadius,
-		marginTop: -188,
 	},
 	fab: {
 		width: 62,
