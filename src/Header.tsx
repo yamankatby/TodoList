@@ -1,11 +1,16 @@
 import React from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import styles from './styles';
+import { ActivityIndicator, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import styles, { PRIMARY_COLOR } from './styles';
 
-const Header = () => {
+interface Props {
+	sheetVisible: Boolean;
+	isLoading: Boolean;
+}
+
+const Header = (props: Props) => {
 	return (
 		<SafeAreaView style={styles.header}>
-			<Text style={styles.screenTitle}>Görev Listesi</Text>
+			<Text style={styles.screenTitle}>{props.sheetVisible ? 'Yeni Görev Oluştur' : 'Görev Listesi'}</Text>
 			<View style={styles.headerContainer}>
 				<TextInput
 					style={styles.input}
@@ -14,7 +19,10 @@ const Header = () => {
 				/>
 				<TouchableOpacity>
 					<View style={styles.createButton}>
-						<Text style={styles.createButtonText}>Oluştur</Text>
+						{props.isLoading ?
+							<ActivityIndicator color={PRIMARY_COLOR} />
+							: <Text style={styles.createButtonText}>Oluştur</Text>
+						}
 					</View>
 				</TouchableOpacity>
 			</View>

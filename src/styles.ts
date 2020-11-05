@@ -36,10 +36,11 @@ const styles = StyleSheet.create({
 		color: 'white',
 	},
 	createButton: {
+		width: 100,
 		height: 48,
 		justifyContent: 'center',
+		alignItems: 'center',
 		marginTop: 12,
-		paddingHorizontal: 22,
 		backgroundColor: 'white',
 		borderRadius: 8,
 	},
@@ -85,6 +86,45 @@ const styles = StyleSheet.create({
 		height: 18,
 		backgroundColor: 'white',
 		borderRadius: 6,
+	},
+	taskContainer: {
+		flex: 1,
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		paddingHorizontal: 18,
+		paddingVertical: 16,
+	},
+	taskTitleContainer: {
+		flex: 1,
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	checkbox: {
+		width: 18,
+		height: 18,
+		borderRadius: 6,
+		borderWidth: 1.8,
+		borderColor: PRIMARY_COLOR,
+	},
+	taskTitle: {
+		marginStart: 14,
+	},
+	taskActionContainer: {
+		flexDirection: 'row',
+	},
+	editButton: {
+		color: '#8a8a8a',
+	},
+	deleteButton: {
+		marginStart: 12,
+		color: '#ff4545',
+	},
+	separator: {
+		flex: 1,
+		height: 1,
+		marginStart: 50,
+		backgroundColor: '#eee',
 	},
 });
 
