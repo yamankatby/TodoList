@@ -1,76 +1,41 @@
-import 'react-native-gesture-handler';
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import TodoList from './screens/TodoList';
-import CreateTodo from './screens/CreateTodo';
-import { StatusBar } from 'react-native';
-
-const Stack = createStackNavigator();
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, StatusBar, TouchableOpacity, View } from 'react-native';
+import Header from './Header';
+import styles, { SHEET_MARGIN_TOP } from './styles';
 
 const App = () => {
+	const sheetAnimation = useRef(new Animated.Value(SHEET_MARGIN_TOP)).current;
+	const fabButtonAnimation = sheetAnimation.interpolate({
+		inputRange: [SHEET_MARGIN_TOP, 0],
+		outputRange: ['0deg', '45deg'],
+	});
+
+	const [sheetVisible, setSheetVisible] = useState(false);
+
+	useEffect(() => {
+		Animated.spring(sheetAnimation, {
+			toValue: sheetVisible ? 0 : SHEET_MARGIN_TOP,
+			useNativeDriver: false,
+		}).start();
+	}, [sheetVisible]);
+
+	const onFABPress = useCallback(() => {
+		setSheetVisible(prevState => !prevState);
+	}, []);
+
 	return (
-		<NavigationContainer>
-			<StatusBar backgroundColor={'rgba(0,0,0,0.2)'} translucent />
-			<Stack.Navigator mode={'modal'} screenOptions={{ header: () => null }}>
-				<Stack.Screen name="TodoList" component={TodoList} />
-				<Stack.Screen name="CreateTodo" component={CreateTodo} />
-			</Stack.Navigator>
-		</NavigationContainer>
+		<View style={styles.container}>
+			<StatusBar barStyle={'light-content'} backgroundColor={'rgba(0,0,0,0.2)'} translucent={true} />
+			<Header />
+			<Animated.View style={[styles.contentContainer, { marginTop: sheetAnimation }]}>
+				<TouchableOpacity onPress={onFABPress}>
+					<Animated.View style={[styles.fabButton, { transform: [{ rotate: fabButtonAnimation }] }]}>
+						<View style={styles.fabButtonIcon} />
+					</Animated.View>
+				</TouchableOpacity>
+			</Animated.View>
+		</View>
 	);
 };
 
 export default App;
-
-// import React, { useEffect, useState } from 'react';
-// import { FlatList, SafeAreaView, Text, View } from 'react-native';
-// import axios from 'axios';
-//
-// const baseURL = 'https://todo.crudful.com';
-// const accessToken = '51571bb27d78483638f504926f759644da74ab11';
-//
-// interface Task {
-// 	id: string;
-// 	title: string;
-// 	due: Date;
-// 	isCompleted: boolean;
-// }
-//
-// const App = () => {
-// 	const [tasks, setTasks] = useState<Task[]>([]);
-//
-// 	useEffect(() => {
-// 		axios({
-// 			url: `${baseURL}/tasks`,
-// 			method: 'GET',
-// 			headers: {
-// 				'Content-Type': 'application/json',
-// 				cfAccessKey: accessToken,
-// 			},
-// 		}).then(res => {
-// 			setTasks(res.data.results);
-// 		}).catch(e => {
-// 			console.warn(e);
-// 		});
-// 	}, []);
-//
-// 	return (
-// 		<View style={{ flex: 1, backgroundColor: 'red' }}>
-// 			<SafeAreaView style={{ backgroundColor: 'green', flex: 1 }}>
-// 				<View style={{ flex: 1, backgroundColor: 'yellow' }}>
-// 					<FlatList
-// 						data={tasks}
-// 						renderItem={({ item }) => (
-// 							<View>
-// 								<Text>{item.title}</Text>
-// 								<Text>{item.due}</Text>
-// 							</View>
-// 						)}
-// 					/>
-// 				</View>
-// 			</SafeAreaView>
-// 		</View>
-// 	);
-// };
-//
-// export default App;
