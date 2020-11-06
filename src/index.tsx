@@ -39,6 +39,7 @@ const Home = () => {
 	const [tasks, setTasks] = useState([]);
 
 	useEffect(() => {
+		setIsLoading(true);
 		axios({
 			url: `${baseURL}/tasks`,
 			method: 'GET',
@@ -46,8 +47,10 @@ const Home = () => {
 		}).then(response => {
 			const tasks = response.data.results;
 			setTasks(tasks);
+			setIsLoading(false);
 		}).catch(e => {
 			console.warn(e);
+			setIsLoading(false);
 		});
 	}, []);
 
@@ -74,6 +77,14 @@ const Home = () => {
 	}, [title]);
 
 	const [isLoading, setIsLoading] = useState(false);
+	const progressAnimation = useRef(new Animated.Value(-62)).current;
+
+	useEffect(() => {
+		Animated.spring(progressAnimation, {
+			toValue: isLoading ? 40 : -62,
+			useNativeDriver: false,
+		}).start();
+	}, [isLoading]);
 
 	const onChangeStatusTouched = useCallback((id: string, isCompleted: boolean) => {
 		setIsLoading(true);
@@ -110,7 +121,7 @@ const Home = () => {
 					setIsLoading(true);
 					axios({
 						url: `${baseURL}/tasks/${id}`,
-						method: 'GET',
+						method: 'DELETE',
 						headers: { 'Content-Type': 'application/json', cfAccessKey },
 					}).then(() => {
 						const index = tasks.findIndex(t => t.id === id);
@@ -186,6 +197,10 @@ const Home = () => {
 						</View>
 					)}
 				/>
+			</Animated.View>
+
+			<Animated.View style={[styles.progress, { bottom: progressAnimation }]}>
+				<ActivityIndicator color={'white'} />
 			</Animated.View>
 		</View>
 	);

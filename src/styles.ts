@@ -4,6 +4,7 @@ export const PRIMARY_COLOR = '#c4a9f6';
 export const PRIMARY_DARK_COLOR = '#B79EE7';
 export const SECONDARY_COLOR = '#7ad9f5';
 export const SEPARATOR_COLOR = '#EDEDED';
+export const GRAY_COLOR = '#454545';
 export const SHEET_MARGIN_TOP = -142;
 export const SHEET_BORDER_RADIUS = Platform.OS === 'ios' ? 40 : 22;
 
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 	},
 	editButton: {
-		color: '#8a8a8a',
+		color: GRAY_COLOR,
 	},
 	deleteButton: {
 		marginStart: 12,
@@ -125,6 +126,31 @@ const styles = StyleSheet.create({
 		height: 1,
 		marginStart: 50,
 		backgroundColor: '#eee',
+	},
+	progress: {
+		width: 62,
+		height: 62,
+		alignSelf: 'center',
+		justifyContent: 'center',
+		alignItems: 'center',
+		position: 'absolute',
+		borderRadius: 31,
+		backgroundColor: GRAY_COLOR,
+
+		...Platform.select({
+			ios: {
+				shadowColor: GRAY_COLOR,
+				shadowOffset: {
+					width: 0,
+					height: 7,
+				},
+				shadowOpacity: 0.41,
+				shadowRadius: 9.11,
+			},
+			android: {
+				elevation: 14,
+			},
+		}),
 	},
 });
 
