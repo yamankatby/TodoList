@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, FlatList, StatusBar, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, FlatList, StatusBar, TouchableOpacity, View } from 'react-native';
 import axios from 'axios';
 import Header from './Header';
 import styles, { SHEET_MARGIN_TOP } from './styles';
@@ -51,11 +51,94 @@ const App = () => {
 		});
 	}, []);
 
+	const [creating, setCreating] = useState(false);
+
+	const createTask = useCallback((title: string) => {
+		setCreating(true);
+		axios({
+			url: `${baseURL}/tasks`,
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				cfAccessKey: accessToken,
+			},
+			data: { title },
+		}).then(res => {
+			setTasks(prevState => [res.data, ...prevState]);
+			setCreating(false);
+			setSheetVisible(false);
+		}).catch(e => {
+			setCreating(false);
+			console.warn(e);
+		});
+	}, [tasks]);
+
+	const [isLoading, setLoading] = useState(false);
+
+	const changeTaskStatus = useCallback((id: string, isCompleted: boolean) => {
+		setLoading(true);
+		axios({
+			url: `${baseURL}/tasks/${id}`,
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+				cfAccessKey: accessToken,
+			},
+			data: { isCompleted },
+		}).then(res => {
+			const index = tasks.findIndex(task => task.id === res.data.id);
+			const task = tasks[index];
+			task.isCompleted = res.data.isCompleted;
+			setTasks(prevState => [...prevState.slice(0, index), task, ...prevState.slice(index + 1)]);
+			setLoading(false);
+		}).catch(e => {
+			console.warn(e);
+			setLoading(false);
+		});
+	}, [tasks]);
+
+	const editTask = useCallback(() => {
+
+	}, []);
+
+	const deleteTask = useCallback((id: string) => {
+		Alert.alert('Bu Görevi Sil', 'Bu görevi silmek istediğinizden emin misiniz?', [
+			{
+				text: 'Sil',
+				style: 'destructive',
+				onPress: () => {
+					setLoading(true);
+					axios({
+						url: `${baseURL}/tasks/${id}`,
+						method: 'DELETE',
+						headers: { 'Content-Type': 'appasdflication/json', cfAccessKey: accessToken },
+					}).then(res => {
+						const index = tasks.findIndex(t => t.id === id);
+						setTasks(prevState => [
+							...prevState.slice(0, index),
+							...prevState.slice(index + 1),
+						]);
+						setLoading(false);
+					}).catch(e => {
+						console.warn(e);
+						setLoading(false);
+					});
+				},
+			},
+			{
+				text: 'İptal',
+				style: 'cancel',
+			},
+		]);
+	}, [tasks]);
+
 	return (
 		<View style={styles.container}>
 			<StatusBar barStyle={'light-content'} backgroundColor={'rgba(0,0,0,0.2)'} translucent={true} />
 			<Header
 				sheetVisible={sheetVisible}
+				isLoading={creating}
+				createTask={createTask}
 			/>
 			<Animated.View style={[styles.contentContainer, { marginTop: sheetAnimation }]}>
 				<TouchableOpacity onPress={onFABPress}>
@@ -65,13 +148,16 @@ const App = () => {
 				</TouchableOpacity>
 				<FlatList
 					data={tasks}
-					ItemSeparatorComponent={() => <View style={styles.separator}/>}
+					ItemSeparatorComponent={() => <View style={styles.separator} />}
 					renderItem={({ item }) => (
 						<TaskItem
 							key={item.id}
 							id={item.id}
 							title={item.title}
 							isCompleted={item.isCompleted}
+							onToggleStatusPress={() => changeTaskStatus(item.id, !item.isCompleted)}
+							onEditStatusPress={() => editTask()}
+							onDeleteStatusPress={() => deleteTask(item.id)}
 						/>
 					)}
 				/>
