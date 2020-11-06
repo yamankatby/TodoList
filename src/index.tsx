@@ -1,127 +1,127 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Animated, FlatList, StatusBar, TouchableOpacity, View } from 'react-native';
+import {
+	ActivityIndicator,
+	Alert,
+	Animated,
+	FlatList,
+	SafeAreaView,
+	StatusBar,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
+} from 'react-native';
 import axios from 'axios';
-import Header from './Header';
-import styles, { SHEET_MARGIN_TOP } from './styles';
-import TaskItem from './TaskItem';
+import styles, { PRIMARY_COLOR, PRIMARY_DARK_COLOR, SHEET_MARGIN_TOP } from './styles';
 
 const baseURL = 'https://todo.crudful.com';
-const accessToken = '51571bb27d78483638f504926f759644da74ab11';
+const cfAccessKey = '51571bb27d78483638f504926f759644da74ab11';
 
-interface Task {
-	id: string;
-	title: string;
-	isCompleted: boolean;
-}
-
-const App = () => {
+const Home = () => {
+	const [isSheetVisible, setIsSheetVisible] = useState(false);
 	const sheetAnimation = useRef(new Animated.Value(SHEET_MARGIN_TOP)).current;
 	const fabButtonAnimation = sheetAnimation.interpolate({
 		inputRange: [SHEET_MARGIN_TOP, 0],
 		outputRange: ['0deg', '45deg'],
 	});
 
-	const [sheetVisible, setSheetVisible] = useState(false);
-
 	useEffect(() => {
 		Animated.spring(sheetAnimation, {
-			toValue: sheetVisible ? 0 : SHEET_MARGIN_TOP,
+			toValue: isSheetVisible ? 0 : SHEET_MARGIN_TOP,
 			useNativeDriver: false,
 		}).start();
-	}, [sheetVisible]);
+	}, [isSheetVisible]);
 
-	const onFABPress = useCallback(() => {
-		setSheetVisible(prevState => !prevState);
+	const onFABTouched = useCallback(() => {
+		setIsSheetVisible(prevState => !prevState);
 	}, []);
 
-	const [tasks, setTasks] = useState<Task[]>([]);
+	const [tasks, setTasks] = useState([]);
 
 	useEffect(() => {
 		axios({
 			url: `${baseURL}/tasks`,
 			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				cfAccessKey: accessToken,
-			},
-		}).then(res => {
-			setTasks(res.data.results);
+			headers: { 'Content-Type': 'application/json', cfAccessKey },
+		}).then(response => {
+			const tasks = response.data.results;
+			setTasks(tasks);
 		}).catch(e => {
 			console.warn(e);
 		});
 	}, []);
 
-	const [creating, setCreating] = useState(false);
+	const [title, setTitle] = useState('');
+	const [isCreating, setIsCreating] = useState(false);
 
-	const createTask = useCallback((title: string) => {
-		setCreating(true);
+	const onCreateTouched = useCallback(() => {
+		setIsCreating(true);
 		axios({
 			url: `${baseURL}/tasks`,
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				cfAccessKey: accessToken,
-			},
+			headers: { 'Content-Type': 'application/json', cfAccessKey },
 			data: { title },
-		}).then(res => {
-			setTasks(prevState => [res.data, ...prevState]);
-			setCreating(false);
-			setSheetVisible(false);
+		}).then(response => {
+			const task = response.data;
+			setIsSheetVisible(false);
+			setTasks(prevState => [task, ...prevState]);
+			setTitle('');
+			setIsCreating(false);
 		}).catch(e => {
-			setCreating(false);
 			console.warn(e);
+			setIsCreating(false);
 		});
-	}, [tasks]);
+	}, [title]);
 
-	const [isLoading, setLoading] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 
-	const changeTaskStatus = useCallback((id: string, isCompleted: boolean) => {
-		setLoading(true);
+	const onChangeStatusTouched = useCallback((id: string, isCompleted: boolean) => {
+		setIsLoading(true);
 		axios({
 			url: `${baseURL}/tasks/${id}`,
 			method: 'PATCH',
-			headers: {
-				'Content-Type': 'application/json',
-				cfAccessKey: accessToken,
-			},
+			headers: { 'Content-Type': 'application/json', cfAccessKey },
 			data: { isCompleted },
-		}).then(res => {
-			const index = tasks.findIndex(task => task.id === res.data.id);
-			const task = tasks[index];
-			task.isCompleted = res.data.isCompleted;
-			setTasks(prevState => [...prevState.slice(0, index), task, ...prevState.slice(index + 1)]);
-			setLoading(false);
+		}).then(response => {
+			const index = tasks.findIndex(t => t.id === id);
+			const task = response.data;
+			setTasks(prevState => [
+				...prevState.slice(0, index),
+				task,
+				...prevState.slice(index + 1),
+			]);
+			setIsLoading(false);
 		}).catch(e => {
 			console.warn(e);
-			setLoading(false);
+			setIsLoading(false);
 		});
 	}, [tasks]);
 
-	const editTask = useCallback(() => {
+	const onEditStatusTouched = useCallback(() => {
 
-	}, []);
+	}, [title]);
 
-	const deleteTask = useCallback((id: string) => {
+	const onDeleteTouched = useCallback((id: string) => {
 		Alert.alert('Bu Görevi Sil', 'Bu görevi silmek istediğinizden emin misiniz?', [
 			{
 				text: 'Sil',
 				style: 'destructive',
 				onPress: () => {
-					setLoading(true);
+					setIsLoading(true);
 					axios({
 						url: `${baseURL}/tasks/${id}`,
-						method: 'DELETE',
-						headers: { 'Content-Type': 'appasdflication/json', cfAccessKey: accessToken },
-					}).then(res => {
+						method: 'GET',
+						headers: { 'Content-Type': 'application/json', cfAccessKey },
+					}).then(() => {
 						const index = tasks.findIndex(t => t.id === id);
 						setTasks(prevState => [
 							...prevState.slice(0, index),
 							...prevState.slice(index + 1),
 						]);
-						setLoading(false);
+						setIsLoading(false);
 					}).catch(e => {
 						console.warn(e);
-						setLoading(false);
+						setIsLoading(false);
 					});
 				},
 			},
@@ -134,31 +134,56 @@ const App = () => {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar barStyle={'light-content'} backgroundColor={'rgba(0,0,0,0.2)'} translucent={true} />
-			<Header
-				sheetVisible={sheetVisible}
-				isLoading={creating}
-				createTask={createTask}
-			/>
+			<StatusBar barStyle={'light-content'} backgroundColor={PRIMARY_DARK_COLOR} />
+			<SafeAreaView style={styles.header}>
+				<Text style={styles.screenTitle}>{isSheetVisible ? 'Yeni Görev Oluştur' : 'Görev Listesi'}</Text>
+				<View style={styles.headerContainer}>
+					<TextInput
+						style={styles.input}
+						placeholder={'Bundan sonra neler yapmalısın?'}
+						placeholderTextColor={'rgba(255,255,255,0.8)'}
+						value={title}
+						onChangeText={text => setTitle(text)}
+					/>
+					<TouchableOpacity onPress={onCreateTouched}>
+						<View style={styles.createButton}>
+							{isCreating ? (
+								<ActivityIndicator color={PRIMARY_COLOR} />
+							) : (
+								<Text style={styles.createButtonText}>Oluştur</Text>
+							)}
+						</View>
+					</TouchableOpacity>
+				</View>
+			</SafeAreaView>
+
 			<Animated.View style={[styles.contentContainer, { marginTop: sheetAnimation }]}>
-				<TouchableOpacity onPress={onFABPress}>
-					<Animated.View style={[styles.fabButton, { transform: [{ rotate: fabButtonAnimation }] }]}>
-						<View style={styles.fabButtonIcon} />
-					</Animated.View>
+				<TouchableOpacity onPress={onFABTouched}>
+					<View style={styles.fabButton}>
+						<Animated.View style={[styles.fabButtonIcon, { transform: [{ rotate: fabButtonAnimation }] }]} />
+					</View>
 				</TouchableOpacity>
+
 				<FlatList
 					data={tasks}
 					ItemSeparatorComponent={() => <View style={styles.separator} />}
 					renderItem={({ item }) => (
-						<TaskItem
-							key={item.id}
-							id={item.id}
-							title={item.title}
-							isCompleted={item.isCompleted}
-							onToggleStatusPress={() => changeTaskStatus(item.id, !item.isCompleted)}
-							onEditStatusPress={() => editTask()}
-							onDeleteStatusPress={() => deleteTask(item.id)}
-						/>
+						<View key={item.id} style={styles.taskContainer}>
+							<View style={styles.taskTitleContainer}>
+								<TouchableOpacity onPress={() => onChangeStatusTouched(item.id, !item.isCompleted)}>
+									<View style={[styles.checkbox, { backgroundColor: item.isCompleted ? PRIMARY_COLOR : undefined }]} />
+								</TouchableOpacity>
+								<Text style={styles.taskTitle}>{item.title}</Text>
+							</View>
+							<View style={styles.taskActionContainer}>
+								<TouchableOpacity>
+									<Text style={styles.editButton}>Düzenle</Text>
+								</TouchableOpacity>
+								<TouchableOpacity onPress={() => onDeleteTouched(item.id)}>
+									<Text style={styles.deleteButton}>Sil</Text>
+								</TouchableOpacity>
+							</View>
+						</View>
 					)}
 				/>
 			</Animated.View>
@@ -166,4 +191,4 @@ const App = () => {
 	);
 };
 
-export default App;
+export default Home;
